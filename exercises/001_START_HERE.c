@@ -5,7 +5,7 @@
 // (Hint: check line 11 and put the type before "main"
 
 
-____ main(____)
+int main(void)
 {
     printf("Hello world!\n");
     return 0;

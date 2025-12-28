@@ -1,4 +1,4 @@
-___
+#include <stdio.h>
 // Oh no, we forgot to #include our stdio header file, so C doesn't know what
 // "printf" means! Note that printf will never print a newline by itself; see
 // what happens when you change the n in \n to some other letter. How would

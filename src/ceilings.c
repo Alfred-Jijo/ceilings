@@ -3,149 +3,186 @@
 #include <string.h>
 #include <sys/stat.h>
 
+/* Platform-specific includes and macros */
 #ifdef _WIN32
 #include <direct.h>
 #include <windows.h>
 #define SLEEP_SEC(s) Sleep((s) * 1000)
 #define CLEAR_SCREEN system("cls")
+#define PATH_SEP "\\"
+#define NULL_DEVICE "NUL"
 #else
+#include <dirent.h>
 #include <unistd.h>
 #define SLEEP_SEC(s) sleep(s)
 #define CLEAR_SCREEN printf("\033[H\033[J")
+#define PATH_SEP "/"
+#define NULL_DEVICE "/dev/null"
 #endif
 
-#define EXERCISE_DIR "exercises"
+/* Configuration */
+#define PATCH_DIR "patches"
+#define MAX_PATH_LEN 1024
+#define MAX_PATCHES 100
 
-// ANSI Colors (Note: Windows 10+ supports these, but older cmds might print raw codes.
-#define HEADER "\033[95m"
-#define BLUE "\033[94m"
+/* ANSI Colors */
 #define GREEN "\033[92m"
-#define YELLOW "\033[93m"
 #define RED "\033[91m"
 #define RESET "\033[0m"
 #define BOLD "\033[1m"
 
-typedef struct {
-	const char *target;
-	const char *filename;
-} Exercise;
-
-Exercise CHAPTERS[] = {{"001_START_HERE", "001_START_HERE.c"},
-		       {"002_stdio", "002_stdio.c"},
-		       {"003_variables", "003_variables.c"},
-		       {"004_loops", "004_loops.c"},
-		       {"005_constants", "005_constants.c"},
-		       {"006_bit_widths", "006_bit_widths.c"},
-		       {"007_getchar", "007_getchar.c"},
-		       {"008_getlines", "008_getlines.c"},
-		       {"019_arrays", "019_arrays.c"},
-		       {"999_the_end", "999_the_end.c"},
-		       {NULL, NULL}};
-
+/* Comparator for qsort to ensure patches run in order (e.g., 01, 02) */
 int
-check_is_done(const char *filepath)
+compare_strings(const void *a, const void *b)
 {
-	char full_path[256];
-	snprintf(full_path, sizeof(full_path), "%s/%s", EXERCISE_DIR, filepath);
+	return strcmp(*(const char **)a, *(const char **)b);
+}
 
-	FILE *fp = fopen(full_path, "r");
-	if (!fp)
-		return 0; // If file doesn't exist, it's definitely not done
+void
+print_pass(const char *msg)
+{
+	printf("[%sPASS%s] %s\n", GREEN, RESET, msg);
+}
 
-	char buffer[1024];
-	int not_done = 0;
-	while (fgets(buffer, sizeof(buffer), fp)) {
-		if (strstr(buffer, "// I AM NOT DONE")) {
-			not_done = 1;
+void
+print_fail(const char *msg)
+{
+	printf("[%sFAIL%s] %s\n", RED, RESET, msg);
+}
+
+/* * Checks if a patch is applied by attempting to reverse-apply it.
+ * Returns 1 if passed (code matches patch), 0 if failed.
+ */
+int
+check_patch(const char *filename)
+{
+	char command[MAX_PATH_LEN];
+
+	/* Construct the command: git apply --check --reverse patches/<filename> > <null_device>
+	 * 2>&1 */
+	snprintf(command, sizeof(command), "git apply --check --reverse \"%s%s%s\" > %s 2>&1",
+		 PATCH_DIR, PATH_SEP, filename, NULL_DEVICE);
+
+	int status = system(command);
+
+	/* system() returns 0 on success (command executed successfully) */
+	return (status == 0) ? 1 : 0;
+}
+
+/* * Cross-platform function to populate the patch_list.
+ * Returns the number of patches found.
+ */
+int
+get_patch_files(char *patch_list[], int max_patches)
+{
+	int count = 0;
+
+#ifdef _WIN32
+	WIN32_FIND_DATA findData;
+	HANDLE hFind;
+	char search_path[MAX_PATH_LEN];
+
+	/* Windows requires a wildcard pattern (e.g., "patches\*.patch") */
+	snprintf(search_path, sizeof(search_path), "%s\\*.patch", PATCH_DIR);
+
+	hFind = FindFirstFile(search_path, &findData);
+	if (hFind == INVALID_HANDLE_VALUE) {
+		return 0; // No files found or directory doesn't exist
+	}
+
+	do {
+		if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			if (count < max_patches) {
+				patch_list[count++] = _strdup(findData.cFileName);
+			}
+		}
+	} while (FindNextFile(hFind, &findData) != 0);
+
+	FindClose(hFind);
+
+#else
+	/* POSIX implementation (Linux/macOS) */
+	DIR *d;
+	struct dirent *dir;
+
+	d = opendir(PATCH_DIR);
+	if (!d) {
+		return 0;
+	}
+
+	while ((dir = readdir(d)) != NULL) {
+		if (dir->d_type != DT_REG && dir->d_type != DT_UNKNOWN) {
+			continue;
+		}
+
+		char *dot = strrchr(dir->d_name, '.');
+		if (!dot || strcmp(dot, ".patch") != 0) {
+			continue;
+		}
+
+		if (count >= max_patches) {
 			break;
 		}
+
+		patch_list[count++] = strdup(dir->d_name);
 	}
-	fclose(fp);
-	return !not_done;
-}
-
-int
-build_and_run(const char *target)
-{
-	char cmd[1024];
-
-	printf(BLUE "Compiling %s...\n" RESET, target);
-
-	snprintf(cmd, sizeof(cmd), "cmake --build . --target %s", target);
-	if (system(cmd) != 0) {
-		printf(RED "COMPILATION FAILED\n" RESET);
-		return 0;
-	}
-
-	printf(GREEN "Running...\n" RESET);
-#ifdef _WIN32
-	// Windows executable path logic
-	snprintf(cmd, sizeof(cmd), "Debug\\%s.exe", target);
-	// Fallback check if simple build
-	struct stat st;
-	if (stat(cmd, &st) != 0) {
-		snprintf(cmd, sizeof(cmd), "%s.exe", target);
-	}
-#else
-	snprintf(cmd, sizeof(cmd), "./%s", target);
+	closedir(d);
 #endif
 
-	if (system(cmd) != 0) {
-		printf(RED "RUNTIME ERROR\n" RESET);
-		return 0;
-	}
-	return 1;
+	return count;
 }
 
 int
-main(int argc, char **argv)
+main()
 {
-	// Basic check for exercises dir
-	struct stat st = {0};
-	if (stat(EXERCISE_DIR, &st) == -1) {
-		printf(RED "Error: '%s' directory not found.\n" RESET, EXERCISE_DIR);
-		printf("Did you forget to apply the patch?\n");
-		printf(YELLOW "Run: git apply exercises.patch\n" RESET);
+	char *patch_list[MAX_PATCHES];
+	int patch_count = 0;
+	int all_passed = 1;
+
+/* Enable ANSI escape codes on Windows 10+ */
+#ifdef _WIN32
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD dwMode = 0;
+	if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode)) {
+		dwMode |= 0x0004; // ENABLE_VIRTUAL_TERMINAL_PROCESSING
+		SetConsoleMode(hOut, dwMode);
+	}
+#endif
+
+	patch_count = get_patch_files(patch_list, MAX_PATCHES);
+
+	if (patch_count == 0) {
+		fprintf(stderr, "%sNo patches found in '%s'.%s\n", RED, PATCH_DIR, RESET);
 		return 1;
 	}
 
-	int watch_mode = (argc > 1 && strcmp(argv[1], "watch") == 0);
+	qsort(patch_list, patch_count, sizeof(char *), compare_strings);
 
-	do {
-		if (watch_mode) {
-			CLEAR_SCREEN;
-			printf(HEADER "=== WATCH MODE ===\n" RESET);
+	printf("%sVerifying Repository State against %d patches...%s\n\n", BOLD, patch_count,
+	       RESET);
+
+	for (int i = 0; i < patch_count; i++) {
+		if (check_patch(patch_list[i])) {
+			char msg[MAX_PATH_LEN];
+			snprintf(msg, sizeof(msg), "%s: Code matches patch.", patch_list[i]);
+			print_pass(msg);
+		} else {
+			char msg[MAX_PATH_LEN];
+			snprintf(msg, sizeof(msg),
+				 "%s: Current code does not match the solution patch.",
+				 patch_list[i]);
+			print_fail(msg);
+			all_passed = 0;
 		}
+		free(patch_list[i]); // Clean up memory
+	}
 
-		int all_done = 1;
-		for (int i = 0; CHAPTERS[i].target != NULL; i++) {
-			if (!check_is_done(CHAPTERS[i].filename)) {
-				all_done = 0;
-				printf(BOLD "Current Exercise: %s\n" RESET, CHAPTERS[i].filename);
-
-				if (build_and_run(CHAPTERS[i].target)) {
-					printf(GREEN "Passed! Remove '// I AM NOT DONE' to "
-						     "continue.\n" RESET);
-				} else {
-					printf(YELLOW "Check %s/%s\n" RESET, EXERCISE_DIR,
-					       CHAPTERS[i].filename);
-				}
-
-				if (!watch_mode)
-					return 1; // Exit if failed in normal mode
-				goto sleep_loop;
-			}
-		}
-
-		if (all_done) {
-			printf(GREEN BOLD "\nAll exercises completed! You are a C master!\n" RESET);
-			return 0;
-		}
-	sleep_loop:
-		if (watch_mode) {
-			SLEEP_SEC(2);
-		}
-	} while (watch_mode);
-
-	return 0;
+	printf("\n========================================\n");
+	if (all_passed) {
+		printf("%s%sRESULT: ALL CHECKS PASSED!%s\n", GREEN, BOLD, RESET);
+		return 0;
+	} else {
+		printf("%s%sRESULT: CHECKS FAILED.%s\n", RED, BOLD, RESET);
+		return 1;
+	}
 }

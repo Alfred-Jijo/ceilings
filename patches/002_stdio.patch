@@ -1,0 +1,10 @@
+diff --git a/exercises/002_stdio.c b/exercises/002_stdio.c
+index 23a50c5..d7caf1f 100644
+--- a/exercises/002_stdio.c
++++ b/exercises/002_stdio.c
+@@ -1,4 +1,4 @@
+-___
++#include <stdio.h>
+ // Oh no, we forgot to #include our stdio header file, so C doesn't know what
+ // "printf" means! Note that printf will never print a newline by itself; see
+ // what happens when you change the n in \n to some other letter. How would
