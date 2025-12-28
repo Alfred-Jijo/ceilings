@@ -18,7 +18,7 @@ To use Ceilings, you need the following tools installed and available in your te
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/Alfred-Jijo/ceilings.git
+    git clone https://github.com/Pinjontall94/ceilings.git
     cd ceilings
     ```
 
