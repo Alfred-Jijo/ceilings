@@ -10,7 +10,7 @@
 // Hint: It looks like #include <something.h>
 //
 
-___
+#include <stdio.h>
 
 int main(void)
 {

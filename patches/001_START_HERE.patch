@@ -1,10 +1,10 @@
 diff --git a/exercises/001_START_HERE.c b/exercises/001_START_HERE.c
-index 0fb0c32..5bc3f53 100644
+index c8c5e37..afeb10c 100644
 --- a/exercises/001_START_HERE.c
 +++ b/exercises/001_START_HERE.c
-@@ -5,7 +5,7 @@
- // (Hint: check line 11 and put the type before "main"
- 
+@@ -14,7 +14,7 @@
+ // Fill in the blanks below to satisfy the contract.
+ //
  
 -____ main(____)
 +int main(void)

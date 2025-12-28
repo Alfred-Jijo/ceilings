@@ -1,0 +1,13 @@
+diff --git a/exercises/002_stdio.c b/exercises/002_stdio.c
+index 2cb0a3f..6c7654d 100644
+--- a/exercises/002_stdio.c
++++ b/exercises/002_stdio.c
+@@ -10,7 +10,7 @@
+ // Hint: It looks like #include <something.h>
+ //
+ 
+-___
++#include <stdio.h>
+ 
+ int main(void)
+ {
