@@ -20,13 +20,13 @@
 int main(void)
 {
     // A number with a decimal point.
-    float pointNumber = 8008.5;
+    ____ pointNumber = 8008.5;
 
     // A standard whole number.
-    int funnyNumber = 420;
+    ____ funnyNumber = 420;
 
     // A really big number! 
-    long long bigNumberOwO = 2147483648; 
+    ____ bigNumberOwO = 2147483648; 
 
     // Hint: 2,147,483,648 is exactly ONE higher than a standard 'int' 
     // can hold on many computers. We need a 'long' or 'long long' here.
@@ -34,15 +34,15 @@ int main(void)
     //  C uses single quotes for single characters!
     // "Strings" (double quotes) are actually arrays of chars, which we 
     // will learn about later.
-    char letter = 'u';
-    char letter2 = 'w';
-    char letter3 = 'u';
+    ____ letter = 'u';
+    ____ letter2 = 'w';
+    ____ letter3 = 'u';
 
     // You can declare variables without giving them a value yet.
     // WARNING: Until you give them a value, 'x' and 'y' contain "garbage" 
     // (whatever random bytes happened to be in that memory address).
-    int x, y;
-    float z, a;
+    ____ x, y;
+    ____ z, a;
 
     x = funnyNumber + 5;
     y = (x - 5) * 100;
@@ -56,7 +56,7 @@ int main(void)
     
     // We need a format specifier to print the float. 
     // Hint: %d is for decimals(integers), %s is for strings... what is for floats?
-    printf("pointNumber is: %f\n", pointNumber);
+    printf("pointNumber is: __\n", pointNumber);
 
     // Wait, why does this work? 
     // In C, characters are secretly just small integers (ASCII codes).
