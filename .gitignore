@@ -45,6 +45,7 @@
 # Kernel Module Compile Results
 *.mod*
 *.cmd
+
 .tmp_versions/
 modules.order
 Module.symvers
@@ -52,6 +53,7 @@ Mkfile.old
 dkms.conf
 bin
 build
+
 zig-*
 ceilings
 /completed/
@@ -59,6 +61,8 @@ ceilings
 /.vs/VSWorkspaceState.json
 /.vs/slnx.sqlite-journal
 /.vs/slnx.sqlite
+
 *.db
 /.vs/ProjectSettings.json
+
 exercises/all_files.txt
