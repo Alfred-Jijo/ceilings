@@ -22,18 +22,23 @@
 
 /* Configuration */
 #define PATCH_DIR "patches"
+#define EXERCISE_DIR "exercises"
 #define MAX_PATH_LEN 1024
 #define MAX_PATCHES 100
 
 /* ANSI Colors */
 #define GREEN "\033[92m"
 #define RED "\033[91m"
+#define YELLOW "\033[93m"
 #define RESET "\033[0m"
 #define BOLD "\033[1m"
 
+/* Function Prototypes */
 int compare_strings(const void *a, const void *b);
 void print_pass(const char *msg);
 void print_fail(const char *msg);
+void print_info(const char *msg);
+int compile_exercise(const char *patch_filename);
 int check_patch(const char *filename);
 int get_patch_files(char *patch_list[], int max_patches);
 
@@ -63,31 +68,42 @@ main(void)
 
 	qsort(patch_list, patch_count, sizeof(char *), compare_strings);
 
-	printf("%sVerifying Repository State against %d patches...%s\n\n", BOLD, patch_count,
+	printf("%sVerifying Repository State against %d exercises...%s\n\n", BOLD, patch_count,
 	       RESET);
 
 	for (int i = 0; i < patch_count; i++) {
+		print_info(patch_list[i]);
+
+		/* Compile the exercise using Make */
+		if (!compile_exercise(patch_list[i])) {
+			all_passed = 0;
+			free(patch_list[i]);
+			/* Stop immediately on compile error so the user focuses on one thing */
+			break;
+		}
+
+		/* Check logic against the patch */
 		if (check_patch(patch_list[i])) {
 			char msg[MAX_PATH_LEN];
-			snprintf(msg, sizeof(msg), "%s: Code matches patch.", patch_list[i]);
+			snprintf(msg, sizeof(msg), "Logic correct.");
 			print_pass(msg);
 		} else {
 			char msg[MAX_PATH_LEN];
 			snprintf(msg, sizeof(msg),
-				 "%s: Current code does not match the solution patch.",
-				 patch_list[i]);
+				 "Code compiled, but logic doesn't match the solution.");
 			print_fail(msg);
 			all_passed = 0;
 		}
-		free(patch_list[i]); // Clean up memory
+		printf("\n");
+		free(patch_list[i]);
 	}
 
-	printf("\n========================================\n");
+	printf("========================================\n");
 	if (all_passed) {
-		printf("%s%sRESULT: ALL CHECKS PASSED!%s\n", GREEN, BOLD, RESET);
+		printf("%s%sRESULT: ALL EXERCISES PASSED!%s\n", GREEN, BOLD, RESET);
 		return 0;
 	} else {
-		printf("%s%sRESULT: CHECKS FAILED.%s\n", RED, BOLD, RESET);
+		printf("%s%sRESULT: FAIL%s\n", RED, BOLD, RESET);
 		return 1;
 	}
 }
@@ -109,6 +125,47 @@ void
 print_fail(const char *msg)
 {
 	printf("[%sFAIL%s] %s\n", RED, RESET, msg);
+}
+
+void
+print_info(const char *msg)
+{
+	printf("[%sINFO%s] %s\n", YELLOW, RESET, msg);
+}
+
+/* * Compiles the exercise file using Make.
+ * Returns 1 if compilation succeeds, 0 otherwise.
+ */
+int
+compile_exercise(const char *patch_filename)
+{
+	char source_path[MAX_PATH_LEN];
+	char make_cmd[MAX_PATH_LEN];
+	char base_name[MAX_PATH_LEN];
+	char *dot;
+
+	/* Remove .patch extension */
+	strncpy(base_name, patch_filename, sizeof(base_name));
+	dot = strrchr(base_name, '.');
+	if (dot)
+		*dot = '\0';
+
+	/* Construct path: exercises/001_intro */
+	snprintf(source_path, sizeof(source_path), "%s%s%s", EXERCISE_DIR, PATH_SEP, base_name);
+
+	/* Construct command: make exercises/001_intro */
+	snprintf(make_cmd, sizeof(make_cmd), "make \"%s\"", source_path);
+
+	printf("%sCompiling %s...%s\n", BOLD, base_name, RESET);
+
+	int status = system(make_cmd);
+
+	if (status != 0) {
+		printf("\n%s[COMPILATION ERROR]%s The code above failed to compile.\n", RED, RESET);
+		printf("Fix the errors in '%s.c' before checking logic.\n", base_name);
+		return 0;
+	}
+	return 1;
 }
 
 /* * Checks if a patch is applied by attempting to reverse-apply it.
