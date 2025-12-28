@@ -31,6 +31,67 @@
 #define RESET "\033[0m"
 #define BOLD "\033[1m"
 
+int compare_strings(const void *a, const void *b);
+void print_pass(const char *msg);
+void print_fail(const char *msg);
+int check_patch(const char *filename);
+int get_patch_files(char *patch_list[], int max_patches);
+
+int
+main(void)
+{
+	char *patch_list[MAX_PATCHES];
+	int patch_count = 0;
+	int all_passed = 1;
+
+/* Enable ANSI escape codes on Windows 10+ */
+#ifdef _WIN32
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD dwMode = 0;
+	if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode)) {
+		dwMode |= 0x0004; // ENABLE_VIRTUAL_TERMINAL_PROCESSING
+		SetConsoleMode(hOut, dwMode);
+	}
+#endif
+
+	patch_count = get_patch_files(patch_list, MAX_PATCHES);
+
+	if (patch_count == 0) {
+		fprintf(stderr, "%sNo patches found in '%s'.%s\n", RED, PATCH_DIR, RESET);
+		return 1;
+	}
+
+	qsort(patch_list, patch_count, sizeof(char *), compare_strings);
+
+	printf("%sVerifying Repository State against %d patches...%s\n\n", BOLD, patch_count,
+	       RESET);
+
+	for (int i = 0; i < patch_count; i++) {
+		if (check_patch(patch_list[i])) {
+			char msg[MAX_PATH_LEN];
+			snprintf(msg, sizeof(msg), "%s: Code matches patch.", patch_list[i]);
+			print_pass(msg);
+		} else {
+			char msg[MAX_PATH_LEN];
+			snprintf(msg, sizeof(msg),
+				 "%s: Current code does not match the solution patch.",
+				 patch_list[i]);
+			print_fail(msg);
+			all_passed = 0;
+		}
+		free(patch_list[i]); // Clean up memory
+	}
+
+	printf("\n========================================\n");
+	if (all_passed) {
+		printf("%s%sRESULT: ALL CHECKS PASSED!%s\n", GREEN, BOLD, RESET);
+		return 0;
+	} else {
+		printf("%s%sRESULT: CHECKS FAILED.%s\n", RED, BOLD, RESET);
+		return 1;
+	}
+}
+
 /* Comparator for qsort to ensure patches run in order (e.g., 01, 02) */
 int
 compare_strings(const void *a, const void *b)
@@ -65,7 +126,7 @@ check_patch(const char *filename)
 
 	int status = system(command);
 
-	/* system() returns 0 on success (command executed successfully) */
+	/* system() returns 0 on success */
 	return (status == 0) ? 1 : 0;
 }
 
@@ -128,61 +189,5 @@ get_patch_files(char *patch_list[], int max_patches)
 	}
 	closedir(d);
 #endif
-
 	return count;
-}
-
-int
-main()
-{
-	char *patch_list[MAX_PATCHES];
-	int patch_count = 0;
-	int all_passed = 1;
-
-/* Enable ANSI escape codes on Windows 10+ */
-#ifdef _WIN32
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	DWORD dwMode = 0;
-	if (hOut != INVALID_HANDLE_VALUE && GetConsoleMode(hOut, &dwMode)) {
-		dwMode |= 0x0004; // ENABLE_VIRTUAL_TERMINAL_PROCESSING
-		SetConsoleMode(hOut, dwMode);
-	}
-#endif
-
-	patch_count = get_patch_files(patch_list, MAX_PATCHES);
-
-	if (patch_count == 0) {
-		fprintf(stderr, "%sNo patches found in '%s'.%s\n", RED, PATCH_DIR, RESET);
-		return 1;
-	}
-
-	qsort(patch_list, patch_count, sizeof(char *), compare_strings);
-
-	printf("%sVerifying Repository State against %d patches...%s\n\n", BOLD, patch_count,
-	       RESET);
-
-	for (int i = 0; i < patch_count; i++) {
-		if (check_patch(patch_list[i])) {
-			char msg[MAX_PATH_LEN];
-			snprintf(msg, sizeof(msg), "%s: Code matches patch.", patch_list[i]);
-			print_pass(msg);
-		} else {
-			char msg[MAX_PATH_LEN];
-			snprintf(msg, sizeof(msg),
-				 "%s: Current code does not match the solution patch.",
-				 patch_list[i]);
-			print_fail(msg);
-			all_passed = 0;
-		}
-		free(patch_list[i]); // Clean up memory
-	}
-
-	printf("\n========================================\n");
-	if (all_passed) {
-		printf("%s%sRESULT: ALL CHECKS PASSED!%s\n", GREEN, BOLD, RESET);
-		return 0;
-	} else {
-		printf("%s%sRESULT: CHECKS FAILED.%s\n", RED, BOLD, RESET);
-		return 1;
-	}
 }
