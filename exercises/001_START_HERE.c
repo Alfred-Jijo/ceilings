@@ -14,7 +14,7 @@
 // Fill in the blanks below to satisfy the contract.
 //
 
-int main(void)
+____ main(____)
 {
     printf("Hello world!\n");
     return 0;
