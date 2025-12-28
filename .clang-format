@@ -1,0 +1,23 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+UseTab: Always
+IndentWidth: 8
+TabWidth: 8
+ContinuationIndentWidth: 8
+
+ColumnLimit: 100
+
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+
+BreakBeforeBraces: Linux
+
+PointerAlignment: Right
+
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: false
+IndentCaseLabels: false
+AllowShortFunctionsOnASingleLine: None
+SortIncludes: true
+...
