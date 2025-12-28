@@ -1,13 +1,29 @@
-#include <stdio.h>
-// Oh no, we forgot to #include our stdio header file, so C doesn't know what
-// "printf" means! Note that printf will never print a newline by itself; see
-// what happens when you change the n in \n to some other letter. How would
-// you print "Hello world!" surrounded by double quotes? How would you put a
-// tab in between "Hello" and "world!"?
+//
+// Oops! C doesn't know what "printf" means yet. 
+//
+// In C, standard tools like printing to the console live in the 
+// "Standard Input/Output" library. We need to tell the compiler to 
+// include the header file for that library.
+//
+// PLEASE FIX ME:
+// Add the missing include directive below. 
+// Hint: It looks like #include <something.h>
+//
 
+___
 
 int main(void)
 {
-    printf("Hello world!\n");  // We can also make single-line comments with
-    return 0;                  // What does changing this do? Try `echo $?`
+    printf("Hello world!\n"); 
+    return 0;
 }
+
+// ----------------------------------------------------------------------
+// EXPERIMENTS (Try these after you get the code to run!):
+//
+// 1. Newlines: Change the '\n' to '\t'. What happens to the output?
+// 2. Quotes: How would you print "Hello" (with the quotes)? 
+//    (Hint: You need to escape them like \")
+// 3. Return codes: The `return 0` tells the OS the program finished 
+//    successfully. Try changing 0 to 1, compiling, running, and then 
+//    immediately typing `echo $?` in your terminal to see the error code.

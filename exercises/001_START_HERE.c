@@ -1,24 +1,33 @@
 #include <stdio.h>
 
- 
-// Uh-oh! We forgot to include a return type for our main function 
-// (Hint: check line 11 and put the type before "main"
+//
+// Uh-oh! The compiler is confused about our main function.
+//
+// In C, the main function is the entry point of your program. It has a
+// specific "contract" with the operating system:
+// 
+// 1. It returns an integer (int) to indicate success or failure.
+// 2. If we aren't using command line arguments, we should explicitly 
+//    say it takes "void" (nothing).
+//
+// PLEASE FIX ME:
+// Fill in the blanks below to satisfy the contract.
+//
 
-
-int main(void)
+____ main(____)
 {
     printf("Hello world!\n");
     return 0;
 }
 
-// Wait, shouldn't main just take no arguments, like `main()`? That compiles!
+// ----------------------------------------------------------------------
+// FOR THE CURIOUS:
 //
-// Well, yes it does, and although it *technically* doesn't cause any
-// problems with C11 onward, earlier versions of C don't distinguish between:
+// You might wonder: why not just write `main()`? 
 //
-//   1. func() [takes no arguments]
-//   2. another_func() [takes a variable number of unassigned arguments]
-// 
-// That's weird! C is weird (you'll see that plenty) so for now we'll stick
-// to best practice and use a keyword there you've probably already googled by
-// now ;)
+// In modern C (C23), `()` actually implies no arguments! But in older
+// versions of C (which act as the foundation for much of the world's 
+// software), `()` meant "an unknown number of arguments." 
+//
+// Because C is picky, we use `(void)` to be 100% explicit that we 
+// want absolutely zero arguments.
