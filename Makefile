@@ -38,6 +38,5 @@ exercises: $(EXERCISE_BINS)
 
 clean:
 	rm -f $(VERIFY_BIN)$(EXT)
-	#rm -f $(EXERCISE_DIR)/*$(EXT)
 
 .PHONY: all clean exercises
