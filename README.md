@@ -48,3 +48,5 @@ To use Ceilings, you need the following tools installed and available in your te
     - Linux
     - macOS
 * [ ] File watcher functionality
+* [ ] Fix generating patches
+* [ ] Generated All patches
