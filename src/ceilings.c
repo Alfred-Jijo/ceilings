@@ -21,10 +21,14 @@
 #endif
 
 /* Configuration */
+#define MAX_PATH_LEN 1024
+/* MAX_BUFFER must be significantly larger than MAX_PATH_LEN to hold
+ * the path + commands (git, make, etc) without compiler warnings. */
+#define MAX_BUFFER 4096
+#define MAX_PATCHES 100
+
 #define PATCH_DIR "patches"
 #define EXERCISE_DIR "exercises"
-#define MAX_PATH_LEN 1024
-#define MAX_PATCHES 100
 
 /* ANSI Colors */
 #define GREEN "\033[92m"
@@ -84,11 +88,11 @@ main(void)
 
 		/* Check logic against the patch */
 		if (check_patch(patch_list[i])) {
-			char msg[MAX_PATH_LEN];
+			char msg[MAX_BUFFER];
 			snprintf(msg, sizeof(msg), "Logic correct.");
 			print_pass(msg);
 		} else {
-			char msg[MAX_PATH_LEN];
+			char msg[MAX_BUFFER];
 			snprintf(msg, sizeof(msg),
 				 "Code compiled, but logic doesn't match the solution.");
 			print_fail(msg);
@@ -130,7 +134,7 @@ print_fail(const char *msg)
 void
 print_info(const char *msg)
 {
-	printf("[%sINFO%s] %s\n", YELLOW, RESET, msg);
+	printf("[%sTEST%s] %s\n", YELLOW, RESET, msg);
 }
 
 /* * Compiles the exercise file using Make.
@@ -139,13 +143,17 @@ print_info(const char *msg)
 int
 compile_exercise(const char *patch_filename)
 {
-	char source_path[MAX_PATH_LEN];
-	char make_cmd[MAX_PATH_LEN];
+	/* Use MAX_BUFFER (4096) to hold path (1024) + extra chars safely */
+	char source_path[MAX_BUFFER];
+	char make_cmd[MAX_BUFFER];
 	char base_name[MAX_PATH_LEN];
 	char *dot;
 
 	/* Remove .patch extension */
 	strncpy(base_name, patch_filename, sizeof(base_name));
+	/* Ensure null termination in case of truncation */
+	base_name[sizeof(base_name) - 1] = '\0';
+	
 	dot = strrchr(base_name, '.');
 	if (dot)
 		*dot = '\0';
@@ -161,7 +169,8 @@ compile_exercise(const char *patch_filename)
 	int status = system(make_cmd);
 
 	if (status != 0) {
-		printf("\n%s[COMPILATION ERROR]%s The code above failed to compile.\n", RED, RESET);
+		printf("\n%s[COMPILATION ERROR]%s The code above failed to compile.\n", RED,
+		       RESET);
 		printf("Fix the errors in '%s.c' before checking logic.\n", base_name);
 		return 0;
 	}
@@ -174,7 +183,8 @@ compile_exercise(const char *patch_filename)
 int
 check_patch(const char *filename)
 {
-	char command[MAX_PATH_LEN];
+	/* Use MAX_BUFFER for the system command */
+	char command[MAX_BUFFER];
 
 	/* Construct the command: git apply --check --reverse patches/<filename> > <null_device>
 	 * 2>&1 */
