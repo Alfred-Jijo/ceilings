@@ -1,5 +1,5 @@
 # Compiler Settings
-CC = gcc
+CC = cc
 CFLAGS = -Wall -Wextra -std=c2x -g
 
 # Directories
