@@ -23,7 +23,7 @@ int main(void)
 //
 // 1. Newlines: Change the '\n' to '\t'. What happens to the output?
 // 2. Quotes: How would you print "Hello" (with the quotes)? 
-//    (Hint: You need to escape them like \")
-// 3. Return codes: The `return 0` tells the OS the program finished 
+//    (Hint: You need to escape sequences like \n and \t)
+// 3. Return codes: The 'return 0' tells the OS the program finished 
 //    successfully. Try changing 0 to 1, compiling, running, and then 
-//    immediately typing `echo $?` in your terminal to see the error code.
+//    immediately typing 'echo $?' in your terminal to see the error code.
